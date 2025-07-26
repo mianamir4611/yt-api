@@ -68,21 +68,36 @@ async function processDownload(url, res) {
       }
     }
 
-    const filename = `${videoId}.mp4`; // Simplified filename using videoId
+    const filename = `${videoId}.mp4`;
     const filePath = path.join(__dirname, "temp", filename);
 
     if (!fs.existsSync(path.join(__dirname, "temp"))) {
       fs.mkdirSync(path.join(__dirname, "temp"));
     }
 
-    // Fetch video data
+    // Attempt to fetch video with ytmp4, with retry logic
     console.log("Attempting to fetch video with ytmp4...");
-    const mediaData = await ytmp4(videoUrl);
-    const downloadUrl = mediaData.video;
+    let mediaData, downloadUrl;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        mediaData = await ytmp4(videoUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Referer": "https://www.youtube.com",
+          },
+        });
+        downloadUrl = mediaData.video;
+        if (downloadUrl) break;
+      } catch (err) {
+        console.error(`ytmp4 attempt ${attempt} failed:`, err.message);
+        if (attempt === 3) throw err;
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Exponential backoff
+      }
+    }
 
     if (!downloadUrl) {
-      console.error("No video URL found in ytmp4 response");
-      return res.status(500).json({ error: "Failed to find any playable video formats" });
+      console.error("No video URL found after retries");
+      return res.status(500).json({ error: "Failed to find any playable video formats after retries" });
     }
 
     console.log("Download URL found:", downloadUrl);
@@ -93,7 +108,7 @@ async function processDownload(url, res) {
         "User-Agent": "Mozilla/5.0",
         "Referer": "https://www.youtube.com",
       },
-      timeout: 10000, // Add timeout to avoid hanging
+      timeout: 10000,
     });
 
     const writer = fs.createWriteStream(filePath);
