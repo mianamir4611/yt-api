@@ -1,15 +1,21 @@
 {
-  "name": "tiktok-api-dl-server",
+  "name": "youtube-downloader-api",
   "version": "1.0.0",
+  "description": "API to download YouTube videos for bot integration",
   "main": "index.js",
-  "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
-    "@tobyg74/tiktok-api-dl": "^1.3.3",
+    "axios": "^1.7.2",
     "express": "^4.18.2",
-    "fs-extra": "^11.2.0",
-    "https": "^1.0.0"
-  }
+    "ruhend-scraper": "^1.0.0",
+    "yt-search": "^2.10.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "author": "Mian Amir",
+  "license": "ISC"
 }
