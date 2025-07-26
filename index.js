@@ -1,6 +1,5 @@
 const express = require("express");
 const { ytmp4 } = require("ruhend-scraper");
-const ytSearch = require("yt-search");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
@@ -45,7 +44,7 @@ async function processDownload(url, res) {
     if (url.includes("youtu.be")) {
       videoId = url.split("youtu.be/")[1].split("?")[0];
     } else if (url.includes("shorts")) {
-      videoId = url.split("shorts/")[1].split("?")[0];
+      videoId = url.split("shorts/")[1].split("?")[0].split("&")[0]; // Clean Shorts ID
     } else {
       videoId = url.split("v=")[1]?.split("&")[0];
     }
@@ -57,16 +56,6 @@ async function processDownload(url, res) {
 
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
     console.log("Constructed videoUrl:", videoUrl);
-
-    // Verify video with yt-search
-    const searchResults = await ytSearch(url);
-    if (!searchResults.videos || !searchResults.videos.length) {
-      console.log("yt-search with URL failed, trying with videoId");
-      const videoIdSearch = await ytSearch({ videoId });
-      if (!videoIdSearch.videos || !videoIdSearch.videos.length) {
-        return res.status(404).json({ error: "Video not found" });
-      }
-    }
 
     const filename = `${videoId}.mp4`;
     const filePath = path.join(__dirname, "temp", filename);
@@ -91,8 +80,7 @@ async function processDownload(url, res) {
           },
           timeout: 10000,
         });
-        console.log("ytmp4 response:", mediaData); // Log full response to inspect structure
-        // Try to find the video URL (check common keys)
+        console.log("ytmp4 response:", mediaData); // Log full response
         downloadUrl = mediaData.video || mediaData.audio || mediaData.url || Object.values(mediaData).find(val => typeof val === "string" && val.includes("https://"));
         if (downloadUrl) break;
       } catch (err) {
