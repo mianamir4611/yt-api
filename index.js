@@ -64,7 +64,7 @@ async function processDownload(url, res) {
       fs.mkdirSync(path.join(__dirname, "temp"));
     }
 
-    // Attempt to fetch video with ytmp4, with enhanced headers and retries
+    // Attempt to fetch video with ytmp4, with enhanced options and retries
     console.log("Attempting to fetch video with ytmp4...");
     let mediaData, downloadUrl;
     for (let attempt = 1; attempt <= 3; attempt++) {
@@ -78,13 +78,14 @@ async function processDownload(url, res) {
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
           },
+          quality: "highest", // Force highest quality video
           timeout: 10000,
         });
         console.log("ytmp4 response:", mediaData); // Log full response
         downloadUrl = mediaData.video || mediaData.audio || mediaData.url || Object.values(mediaData).find(val => typeof val === "string" && val.includes("https://"));
         if (downloadUrl) break;
       } catch (err) {
-        console.error(`ytmp4 attempt ${attempt} failed:`, err.message);
+        console.error(`ytmp4 attempt ${attempt} failed:`, err.message, "Stack:", err.stack);
         if (attempt === 3) throw err;
         await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Exponential backoff
       }
@@ -128,7 +129,7 @@ async function processDownload(url, res) {
       res.status(500).json({ error: `Error writing file: ${err.message}` });
     });
   } catch (err) {
-    console.error("Error in processDownload:", err.message);
+    console.error("Error in processDownload:", err.message, "Stack:", err.stack);
     res.status(500).json({ error: `Error: ${err.message}` });
   }
 }
