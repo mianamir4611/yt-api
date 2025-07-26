@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 🧠 Load your YouTube cookie
-const YT_COOKIE = process.env.YT_COOKIE || fs.readFileSync("cookie.txt", "utf8");
+const YT_COOKIE = process.env.YT_COOKIE || fs.readFileSync("cookies.txt", "utf8");
 
 app.get("/", (req, res) => {
   res.send("✅ YouTube Downloader with Cookies is running");
