@@ -42,18 +42,17 @@ app.get("/download", async (req, res) => {
       videoId = url.split("v=")[1]?.split("&")[0];
     }
 
-    console.log("Extracted videoId:", videoId); // Debug log
+    console.log("Extracted videoId:", videoId);
     if (!videoId) {
       return res.status(400).json({ error: "Invalid YouTube URL" });
     }
 
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log("Constructed videoUrl:", videoUrl); // Debug log
+    console.log("Constructed videoUrl:", videoUrl);
 
-    // Test yt-search with the full URL instead of videoId
-    const searchResults = await ytSearch(url); // Try searching with the full URL
+    const searchResults = await ytSearch(url);
     if (!searchResults.videos || !searchResults.videos.length) {
-      console.log("yt-search failed, trying with videoId");
+      console.log("yt-search with URL failed, trying with videoId");
       const videoIdSearch = await ytSearch({ videoId });
       if (!videoIdSearch.videos || !videoIdSearch.videos.length) {
         return res.status(404).json({ error: "Video not found" });
@@ -72,11 +71,15 @@ app.get("/download", async (req, res) => {
     }
 
     let downloadUrl, mediaData;
-    mediaData = await ytmp4(videoUrl);
-    downloadUrl = mediaData.video;
-
-    if (!downloadUrl) {
-      return res.status(500).json({ error: "Unable to fetch video link" });
+    try {
+      mediaData = await ytmp4(videoUrl);
+      downloadUrl = mediaData.video;
+      if (!downloadUrl) {
+        throw new Error("No video URL found in response");
+      }
+    } catch (downloadErr) {
+      console.error("ytmp4 error:", downloadErr.message);
+      return res.status(500).json({ error: `Error: Failed to find playable formats - ${downloadErr.message}` });
     }
 
     const response = await axios.get(downloadUrl, {
