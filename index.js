@@ -89,9 +89,11 @@ async function processDownload(url, res) {
             "Connection": "keep-alive",
             "Upgrade-Insecure-Requests": "1",
           },
-          timeout: 10000, // 10-second timeout per attempt
+          timeout: 10000,
         });
-        downloadUrl = mediaData.video;
+        console.log("ytmp4 response:", mediaData); // Log full response to inspect structure
+        // Try to find the video URL (check common keys)
+        downloadUrl = mediaData.video || mediaData.audio || mediaData.url || Object.values(mediaData).find(val => typeof val === "string" && val.includes("https://"));
         if (downloadUrl) break;
       } catch (err) {
         console.error(`ytmp4 attempt ${attempt} failed:`, err.message);
@@ -101,7 +103,7 @@ async function processDownload(url, res) {
     }
 
     if (!downloadUrl) {
-      console.error("No video URL found after retries");
+      console.error("No video URL found after retries, response:", mediaData);
       return res.status(500).json({ error: "Failed to find any playable video formats after retries" });
     }
 
