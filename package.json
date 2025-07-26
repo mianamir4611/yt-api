@@ -10,12 +10,12 @@
   "dependencies": {
     "axios": "^1.7.2",
     "express": "^4.18.2",
-    "ruhend-scraper": "^1.0.0",
+    "ruhend-scraper": "^9.0.5",
     "yt-search": "^2.10.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "author": "Mian Amir",
+  "author": "Your Name",
   "license": "ISC"
 }
